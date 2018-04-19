@@ -52,17 +52,19 @@ class StateFlusher(object):
     def __init__(self, lib_dir):
         self._timestamp = datetime.now()
         self._source = lib_dir
-        self._target = os.path.join(self._source, 'history', self._timestamp.isoformat())
 
-    def flush(self):
+    def flush(self, timestamp):
         files = self._get_files_to_archive()
         if len(files) == 0:
             return
 
-        if self._mkdir():
-            self._archive(files)
+        if self._mkdir(timestamp):
+            self._archive(files, timestamp)
         else:
             self._purge(files)
+
+    def history_dir(self, timestamp):
+        return os.path.join(self._source, 'history', timestamp.isoformat())
 
     def _get_files_to_archive(self):
         files = []
@@ -76,19 +78,21 @@ class StateFlusher(object):
 
         return files
 
-    def _archive(self, files):
+    def _archive(self, files, timestamp):
         for f in files:
-            shutil.move(f, self._target)
+            dst = os.path.join(self.history_dir(timestamp), os.path.basename(f))
+            shutil.move(f, dst)
 
     def _purge(self, files):
         for f in files:
             os.remove(f)
 
-    def _mkdir(self):
+    def _mkdir(self, timestamp):
         try:
-            fileutil.mkdir(self._target, mode=0o700)
+            d = self.history_dir(timestamp)
+            fileutil.mkdir(d, mode=0o700)
             return True
-        except:
+        except IOError as e:
             return False
 
 
@@ -163,6 +167,12 @@ class StateDirectory(State):
 class StateArchiver(object):
     def __init__(self, lib_dir):
         self._source = os.path.join(lib_dir, 'history')
+
+        if not os.path.isdir(self._source):
+            try:
+                fileutil.mkdir(self._source, mode=0o700)
+            except IOError as e:
+                self.logger.error(u"Failed to create archive history dir: {0}", e)
 
     def purge(self):
         """
