@@ -3,7 +3,8 @@
 import json
 
 from azurelinuxagent.common.exception import HttpError
-from azurelinuxagent.common.protocol.imds import ComputeInfo, ImdsClient
+from azurelinuxagent.common.protocol.imds import ComputeInfo, ImdsClient, IMDS_IMAGE_ORIGIN_CUSTOM, \
+    IMDS_IMAGE_ORIGIN_ENDORSED, IMDS_IMAGE_ORIGIN_PLATFORM
 from azurelinuxagent.common.protocol.restapi import set_properties
 from azurelinuxagent.common.utils import restutil
 from tests.ga.test_update import ResponseMock
@@ -98,3 +99,136 @@ class TestImds(AgentTestCase):
 
         self.assertEqual('UnitPublisher:UnitOffer:UnitSku:UnitVersion', compute_info.image_info)
 
+    def test_is_custom_image(self):
+        image_origin = self._setup_image_origin_assert("", "", "", "")
+        self.assertEqual(IMDS_IMAGE_ORIGIN_CUSTOM, image_origin)
+
+    def test_is_endorsed_CentOS(self):
+        self.assertEqual(IMDS_IMAGE_ORIGIN_ENDORSED, self._setup_image_origin_assert("OpenLogic", "CentOS", "6.3", ""))
+        self.assertEqual(IMDS_IMAGE_ORIGIN_ENDORSED, self._setup_image_origin_assert("OpenLogic", "CentOS", "6.4", ""))
+        self.assertEqual(IMDS_IMAGE_ORIGIN_ENDORSED, self._setup_image_origin_assert("OpenLogic", "CentOS", "6.5", ""))
+        self.assertEqual(IMDS_IMAGE_ORIGIN_ENDORSED, self._setup_image_origin_assert("OpenLogic", "CentOS", "6.6", ""))
+        self.assertEqual(IMDS_IMAGE_ORIGIN_ENDORSED, self._setup_image_origin_assert("OpenLogic", "CentOS", "6.7", ""))
+        self.assertEqual(IMDS_IMAGE_ORIGIN_ENDORSED, self._setup_image_origin_assert("OpenLogic", "CentOS", "6.8", ""))
+        self.assertEqual(IMDS_IMAGE_ORIGIN_ENDORSED, self._setup_image_origin_assert("OpenLogic", "CentOS", "6.9", ""))
+        self.assertEqual(IMDS_IMAGE_ORIGIN_ENDORSED, self._setup_image_origin_assert("OpenLogic", "CentOS", "7.0", ""))
+        self.assertEqual(IMDS_IMAGE_ORIGIN_ENDORSED, self._setup_image_origin_assert("OpenLogic", "CentOS", "7.1", ""))
+        self.assertEqual(IMDS_IMAGE_ORIGIN_ENDORSED, self._setup_image_origin_assert("OpenLogic", "CentOS", "7.2", ""))
+        self.assertEqual(IMDS_IMAGE_ORIGIN_ENDORSED, self._setup_image_origin_assert("OpenLogic", "CentOS", "7.3", ""))
+        self.assertEqual(IMDS_IMAGE_ORIGIN_ENDORSED, self._setup_image_origin_assert("OpenLogic", "CentOS", "7.4", ""))
+        self.assertEqual(IMDS_IMAGE_ORIGIN_ENDORSED, self._setup_image_origin_assert("OpenLogic", "CentOS", "7-LVM", ""))
+        self.assertEqual(IMDS_IMAGE_ORIGIN_ENDORSED, self._setup_image_origin_assert("OpenLogic", "CentOS", "7-RAW", ""))
+
+        self.assertEqual(IMDS_IMAGE_ORIGIN_ENDORSED, self._setup_image_origin_assert("OpenLogic", "CentOS-HPC", "6.5", ""))
+        self.assertEqual(IMDS_IMAGE_ORIGIN_ENDORSED, self._setup_image_origin_assert("OpenLogic", "CentOS-HPC", "6.8", ""))
+        self.assertEqual(IMDS_IMAGE_ORIGIN_ENDORSED, self._setup_image_origin_assert("OpenLogic", "CentOS-HPC", "7.1", ""))
+        self.assertEqual(IMDS_IMAGE_ORIGIN_ENDORSED, self._setup_image_origin_assert("OpenLogic", "CentOS-HPC", "7.3", ""))
+        self.assertEqual(IMDS_IMAGE_ORIGIN_ENDORSED, self._setup_image_origin_assert("OpenLogic", "CentOS-HPC", "7.4", ""))
+
+        self.assertEqual(IMDS_IMAGE_ORIGIN_PLATFORM, self._setup_image_origin_assert("OpenLogic", "CentOS", "6.1", ""))
+        self.assertEqual(IMDS_IMAGE_ORIGIN_PLATFORM, self._setup_image_origin_assert("OpenLogic", "CentOS", "6.2", ""))
+
+    def test_is_endorsed_CoreOS(self):
+        self.assertEqual(IMDS_IMAGE_ORIGIN_ENDORSED, self._setup_image_origin_assert("CoreOS", "CoreOS", "stable", "494.4.0"))
+        self.assertEqual(IMDS_IMAGE_ORIGIN_ENDORSED, self._setup_image_origin_assert("CoreOS", "CoreOS", "stable", "899.17.0"))
+        self.assertEqual(IMDS_IMAGE_ORIGIN_ENDORSED, self._setup_image_origin_assert("CoreOS", "CoreOS", "stable", "1688.5.3"))
+
+        self.assertEqual(IMDS_IMAGE_ORIGIN_PLATFORM, self._setup_image_origin_assert("CoreOS", "CoreOS", "stable", "494.3.0"))
+        self.assertEqual(IMDS_IMAGE_ORIGIN_PLATFORM, self._setup_image_origin_assert("CoreOS", "CoreOS", "alpha", ""))
+        self.assertEqual(IMDS_IMAGE_ORIGIN_PLATFORM, self._setup_image_origin_assert("CoreOS", "CoreOS", "beta", ""))
+
+    def test_is_endorsed_Debian(self):
+        self.assertEqual(IMDS_IMAGE_ORIGIN_ENDORSED, self._setup_image_origin_assert("credativ", "Debian", "7", ""))
+        self.assertEqual(IMDS_IMAGE_ORIGIN_ENDORSED, self._setup_image_origin_assert("credativ", "Debian", "8", ""))
+        self.assertEqual(IMDS_IMAGE_ORIGIN_ENDORSED, self._setup_image_origin_assert("credativ", "Debian", "9", ""))
+
+        self.assertEqual(IMDS_IMAGE_ORIGIN_PLATFORM, self._setup_image_origin_assert("credativ", "Debian", "9-DAILY", ""))
+        self.assertEqual(IMDS_IMAGE_ORIGIN_PLATFORM, self._setup_image_origin_assert("credativ", "Debian", "10-DAILY", ""))
+
+    def test_is_endorsed_Rhel(self):
+        self.assertEqual(IMDS_IMAGE_ORIGIN_ENDORSED, self._setup_image_origin_assert("RedHat", "RHEL", "6.7", ""))
+        self.assertEqual(IMDS_IMAGE_ORIGIN_ENDORSED, self._setup_image_origin_assert("RedHat", "RHEL", "6.8", ""))
+        self.assertEqual(IMDS_IMAGE_ORIGIN_ENDORSED, self._setup_image_origin_assert("RedHat", "RHEL", "6.9", ""))
+        self.assertEqual(IMDS_IMAGE_ORIGIN_ENDORSED, self._setup_image_origin_assert("RedHat", "RHEL", "7.0", ""))
+        self.assertEqual(IMDS_IMAGE_ORIGIN_ENDORSED, self._setup_image_origin_assert("RedHat", "RHEL", "7.1", ""))
+        self.assertEqual(IMDS_IMAGE_ORIGIN_ENDORSED, self._setup_image_origin_assert("RedHat", "RHEL", "7.2", ""))
+        self.assertEqual(IMDS_IMAGE_ORIGIN_ENDORSED, self._setup_image_origin_assert("RedHat", "RHEL", "7.3", ""))
+        self.assertEqual(IMDS_IMAGE_ORIGIN_ENDORSED, self._setup_image_origin_assert("RedHat", "RHEL", "7.4", ""))
+        self.assertEqual(IMDS_IMAGE_ORIGIN_ENDORSED, self._setup_image_origin_assert("RedHat", "RHEL", "7-LVM", ""))
+        self.assertEqual(IMDS_IMAGE_ORIGIN_ENDORSED, self._setup_image_origin_assert("RedHat", "RHEL", "7-RAW", ""))
+
+        self.assertEqual(IMDS_IMAGE_ORIGIN_ENDORSED, self._setup_image_origin_assert("RedHat", "RHEL-SAP-HANA", "7.2", ""))
+        self.assertEqual(IMDS_IMAGE_ORIGIN_ENDORSED, self._setup_image_origin_assert("RedHat", "RHEL-SAP-HANA", "7.3", ""))
+        self.assertEqual(IMDS_IMAGE_ORIGIN_ENDORSED, self._setup_image_origin_assert("RedHat", "RHEL-SAP-HANA", "7.4", ""))
+
+        self.assertEqual(IMDS_IMAGE_ORIGIN_ENDORSED, self._setup_image_origin_assert("RedHat", "RHEL-SAP", "7.2", ""))
+        self.assertEqual(IMDS_IMAGE_ORIGIN_ENDORSED, self._setup_image_origin_assert("RedHat", "RHEL-SAP", "7.3", ""))
+        self.assertEqual(IMDS_IMAGE_ORIGIN_ENDORSED, self._setup_image_origin_assert("RedHat", "RHEL-SAP", "7.4", ""))
+
+        self.assertEqual(IMDS_IMAGE_ORIGIN_ENDORSED, self._setup_image_origin_assert("RedHat", "RHEL-SAP-APPS", "7.2", ""))
+        self.assertEqual(IMDS_IMAGE_ORIGIN_ENDORSED, self._setup_image_origin_assert("RedHat", "RHEL-SAP-APPS", "7.3", ""))
+        self.assertEqual(IMDS_IMAGE_ORIGIN_ENDORSED, self._setup_image_origin_assert("RedHat", "RHEL-SAP-APPS", "7.4", ""))
+
+        self.assertEqual(IMDS_IMAGE_ORIGIN_PLATFORM, self._setup_image_origin_assert("RedHat", "RHEL", "6.6", ""))
+
+
+    def test_is_endorsed_SuSE(self):
+        self.assertEqual(IMDS_IMAGE_ORIGIN_ENDORSED, self._setup_image_origin_assert("SuSE", "SLES", "11-SP4", ""))
+        self.assertEqual(IMDS_IMAGE_ORIGIN_ENDORSED, self._setup_image_origin_assert("SuSE", "SLES-BYOS", "11-SP4", ""))
+
+        self.assertEqual(IMDS_IMAGE_ORIGIN_ENDORSED, self._setup_image_origin_assert("SuSE", "SLES", "12-SP1", ""))
+        self.assertEqual(IMDS_IMAGE_ORIGIN_ENDORSED, self._setup_image_origin_assert("SuSE", "SLES", "12-SP2", ""))
+        self.assertEqual(IMDS_IMAGE_ORIGIN_ENDORSED, self._setup_image_origin_assert("SuSE", "SLES", "12-SP3", ""))
+        self.assertEqual(IMDS_IMAGE_ORIGIN_ENDORSED, self._setup_image_origin_assert("SuSE", "SLES", "12-SP4", ""))
+        self.assertEqual(IMDS_IMAGE_ORIGIN_ENDORSED, self._setup_image_origin_assert("SuSE", "SLES", "12-SP5", ""))
+
+        self.assertEqual(IMDS_IMAGE_ORIGIN_ENDORSED, self._setup_image_origin_assert("SuSE", "SLES-BYOS", "12-SP1", ""))
+        self.assertEqual(IMDS_IMAGE_ORIGIN_ENDORSED, self._setup_image_origin_assert("SuSE", "SLES-BYOS", "12-SP2", ""))
+        self.assertEqual(IMDS_IMAGE_ORIGIN_ENDORSED, self._setup_image_origin_assert("SuSE", "SLES-BYOS", "12-SP3", ""))
+        self.assertEqual(IMDS_IMAGE_ORIGIN_ENDORSED, self._setup_image_origin_assert("SuSE", "SLES-BYOS", "12-SP4", ""))
+        self.assertEqual(IMDS_IMAGE_ORIGIN_ENDORSED, self._setup_image_origin_assert("SuSE", "SLES-BYOS", "12-SP5", ""))
+
+        self.assertEqual(IMDS_IMAGE_ORIGIN_ENDORSED, self._setup_image_origin_assert("SuSE", "SLES-SAP", "12-SP1", ""))
+        self.assertEqual(IMDS_IMAGE_ORIGIN_ENDORSED, self._setup_image_origin_assert("SuSE", "SLES-SAP", "12-SP2", ""))
+        self.assertEqual(IMDS_IMAGE_ORIGIN_ENDORSED, self._setup_image_origin_assert("SuSE", "SLES-SAP", "12-SP3", ""))
+        self.assertEqual(IMDS_IMAGE_ORIGIN_ENDORSED, self._setup_image_origin_assert("SuSE", "SLES-SAP", "12-SP4", ""))
+        self.assertEqual(IMDS_IMAGE_ORIGIN_ENDORSED, self._setup_image_origin_assert("SuSE", "SLES-SAP", "12-SP5", ""))
+
+        self.assertEqual(IMDS_IMAGE_ORIGIN_PLATFORM, self._setup_image_origin_assert("SuSE", "SLES", "11-SP3", ""))
+
+    def test_is_endorsed_UbuntuServer(self):
+        self.assertEqual(IMDS_IMAGE_ORIGIN_ENDORSED, self._setup_image_origin_assert("Canonical", "UbuntuServer", "14.04.0-LTS", ""))
+        self.assertEqual(IMDS_IMAGE_ORIGIN_ENDORSED, self._setup_image_origin_assert("Canonical", "UbuntuServer", "14.04.1-LTS", ""))
+        self.assertEqual(IMDS_IMAGE_ORIGIN_ENDORSED, self._setup_image_origin_assert("Canonical", "UbuntuServer", "14.04.2-LTS", ""))
+        self.assertEqual(IMDS_IMAGE_ORIGIN_ENDORSED, self._setup_image_origin_assert("Canonical", "UbuntuServer", "14.04.3-LTS", ""))
+        self.assertEqual(IMDS_IMAGE_ORIGIN_ENDORSED, self._setup_image_origin_assert("Canonical", "UbuntuServer", "14.04.4-LTS", ""))
+        self.assertEqual(IMDS_IMAGE_ORIGIN_ENDORSED, self._setup_image_origin_assert("Canonical", "UbuntuServer", "14.04.5-LTS", ""))
+        self.assertEqual(IMDS_IMAGE_ORIGIN_ENDORSED, self._setup_image_origin_assert("Canonical", "UbuntuServer", "14.04.6-LTS", ""))
+        self.assertEqual(IMDS_IMAGE_ORIGIN_ENDORSED, self._setup_image_origin_assert("Canonical", "UbuntuServer", "14.04.7-LTS", ""))
+        self.assertEqual(IMDS_IMAGE_ORIGIN_ENDORSED, self._setup_image_origin_assert("Canonical", "UbuntuServer", "14.04.8-LTS", ""))
+        self.assertEqual(IMDS_IMAGE_ORIGIN_ENDORSED, self._setup_image_origin_assert("Canonical", "UbuntuServer", "16.04-LTS", ""))
+        self.assertEqual(IMDS_IMAGE_ORIGIN_ENDORSED, self._setup_image_origin_assert("Canonical", "UbuntuServer", "18.04-LTS", ""))
+        self.assertEqual(IMDS_IMAGE_ORIGIN_ENDORSED, self._setup_image_origin_assert("Canonical", "UbuntuServer", "20.04-LTS", ""))
+        self.assertEqual(IMDS_IMAGE_ORIGIN_ENDORSED, self._setup_image_origin_assert("Canonical", "UbuntuServer", "22.04-LTS", ""))
+
+        self.assertEqual(IMDS_IMAGE_ORIGIN_PLATFORM, self._setup_image_origin_assert("Canonical", "UbuntuServer", "12.04-LTS", ""))
+        self.assertEqual(IMDS_IMAGE_ORIGIN_PLATFORM, self._setup_image_origin_assert("Canonical", "UbuntuServer", "17.10", ""))
+        self.assertEqual(IMDS_IMAGE_ORIGIN_PLATFORM, self._setup_image_origin_assert("Canonical", "UbuntuServer", "18.04-DAILY-LTS", ""))
+
+    def _setup_image_origin_assert(self, publisher, offer, sku, version):
+        s = '''{{
+            "publisher": "{0}",
+            "offer": "{1}",
+            "sku": "{2}",
+            "version": "{3}"
+        }}'''.format(publisher, offer, sku, version)
+
+        data =json.loads(s, encoding='utf-8')
+        compute_info = ComputeInfo()
+        set_properties("compute", compute_info, data)
+
+        return compute_info.image_origin
+
+
+if __name__ == '__main__':
+    unittest.main()
