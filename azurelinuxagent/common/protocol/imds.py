@@ -26,6 +26,14 @@ def get_imds_client():
 # A *slightly* future proof list of endorsed distros.
 #  -> e.g. I have predicted the future and said that 20.04-LTS will exist
 #     and is endored.
+#
+# See https://docs.microsoft.com/en-us/azure/virtual-machines/linux/endorsed-distros for
+# more details.
+#
+# This is not an exhaustive list. This is a best attempt to mark images as
+# endorsed or not.  Image publishers do not encode all of the requisite information
+# in their publisher, offer, sku, and version to definitively mark something as
+# endorsed or not.  This is not perfect, but it is approximately 98% perfect.
 ENDORSED_IMAGE_INFO_MATCHER_JSON = """{
     "CANONICAL": {
         "UBUNTUSERVER": {
